@@ -16,7 +16,7 @@ type ArticleService struct {
 type ArticleServiceInterface interface {
 	//CreateArticle(ctx context.Context, article repository.RowArticle) (primitive.ObjectID, error)
 	//GetArticleByID(ctx context.Context, id string) (*repository.RowArticle, error)
-	GetAllArticles(ctx context.Context) ([]model.ArticleResponse, error)
+	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error)
 }
 
 // NewArticleService - создаёт новый экземпляр ArticleService.
@@ -24,20 +24,35 @@ func NewArticleService(repo repository.ArticleRepositoryInterface, logger *zap.L
 	return &ArticleService{repo: repo, logger: logger}
 }
 
-// GetAllArticles - получает все статьи.
-func (s *ArticleService) GetAllArticles(ctx context.Context) ([]model.ArticleResponse, error) {
-	articles, err := s.repo.GetAll(ctx)
+// GetAllArticles - получает статьи с пагинацией.
+func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error) {
+	articles, totalCount, err := s.repo.GetAll(ctx, pageNumber, pageSize)
 	if err != nil {
 		s.logger.Error("Failed to fetch all articles", zap.Error(err))
 		return nil, err
 	}
 
-	// transform data []RowArticle to []ArticleResponse
+	// Преобразуем RowArticle в ArticleResponse
 	transformedResp := make([]model.ArticleResponse, len(articles))
 	for i, article := range articles {
 		transformedResp[i] = article.CreateArtResp()
 	}
 
-	s.logger.Info("All articles fetched successfully", zap.Int("count", len(articles)))
-	return transformedResp, nil
+	// Формируем структуру Paginate с типом ArticleResponse
+	result := &model.Paginate[model.ArticleResponse]{
+		PageNumber:    pageNumber,
+		RowTotalCount: int(totalCount),
+		CurrentPage:   pageNumber,
+		PageSize:      pageSize,
+		Items:         transformedResp,
+	}
+
+	s.logger.Info("All articles fetched successfully with pagination",
+		zap.Int("pageNumber", pageNumber),
+		zap.Int("pageSize", pageSize),
+		zap.Int("totalCount", int(totalCount)),
+		zap.Int("fetchedItems", len(transformedResp)),
+	)
+
+	return result, nil
 }

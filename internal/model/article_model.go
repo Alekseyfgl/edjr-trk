@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+// Paginate - common structure for pagination
+type Paginate[T any] struct {
+	PageNumber    int `json:"pageNumber"`
+	RowTotalCount int `json:"rowTotalCount"`
+	CurrentPage   int `json:"currentPage"`
+	PageSize      int `json:"pageSize"`
+	Items         []T `json:"items"`
+}
+
 // RowArticle - структура для хранения данных статьи.
 type RowArticle struct {
 	ID    primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`

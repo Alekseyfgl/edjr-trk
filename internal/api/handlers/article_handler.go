@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"edjr-trk/internal/api/dto"
+	"edjr-trk/internal/api/validators" // Подключение кастомного валидатора
 	"edjr-trk/internal/service"
-	"encoding/base64"
-	"fmt"
+	"edjr-trk/pkg/http_error"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -12,145 +12,85 @@ import (
 )
 
 type ArticleHandler struct {
-	service *service.ArticleService
-	logger  *zap.Logger
+	service  *service.ArticleService
+	logger   *zap.Logger
+	validate *validator.Validate
 }
 
-var validate *validator.Validate
-
-func validateImg(fl validator.FieldLevel) bool {
-	img, ok := fl.Field().Interface().(*string)
-	if !ok {
-		fmt.Println("Img field is not of type *string")
-		return false
-	}
-
-	if img == nil {
-		fmt.Println("Img field is null - validation passed")
-		return true
-	}
-
-	fmt.Println("Validating img field:", *img)
-
-	decoded, err := base64.StdEncoding.DecodeString(*img)
-	if err != nil {
-		fmt.Println("Base64 decode error:", err)
-		return false
-	}
-
-	if len(decoded) == 0 {
-		fmt.Println("Decoded Base64 is empty")
-		return false
-	}
-
-	return true
-}
-func init() {
-	validate = validator.New()
-
-	// Регистрируем кастомное правило валидации
-	err := validate.RegisterValidation("img_base64_or_null", validateImg)
-	if err != nil {
-		// Логируем ошибку
-		zap.L().Fatal("Failed to register custom validation rule", zap.Error(err))
-	}
-}
-
-func ValidateStruct(input interface{}) error {
-	fmt.Printf("Validating struct: %+v\n", input)
-	return validate.Struct(input)
-}
-
-// NewArticleHandler - создаёт новый экземпляр ArticleHandler.
+// NewArticleHandler creates a new instance of ArticleHandler.
 func NewArticleHandler(service *service.ArticleService, logger *zap.Logger) *ArticleHandler {
+	validate := validator.New()
+	validators.RegArticleValidators(validate) // Регистрируем кастомные валидаторы
 	return &ArticleHandler{
-		service: service,
-		logger:  logger,
+		service:  service,
+		logger:   logger,
+		validate: validate,
 	}
 }
 
+// ValidateStruct validates the given input structure.
+func (h *ArticleHandler) ValidateStruct(input interface{}) error {
+	return h.validate.Struct(input)
+}
+
+// CreateArticle handles creating a new article.
 func (h *ArticleHandler) CreateArticle(c *fiber.Ctx) error {
 	h.logger.Info("Received request to create a new article")
 
-	// Парсинг входных данных.
+	// Parse the input data.
 	var req dto.CreateArticleRequest
 	if err := c.BodyParser(&req); err != nil {
 		h.logger.Error("Failed to parse request body", zap.Error(err))
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)
 	}
 
-	// Валидация данных.
-	if err := ValidateStruct(&req); err != nil {
+	// Validate the input data.
+	if err := h.ValidateStruct(&req); err != nil {
 		h.logger.Error("Validation failed for request body", zap.Error(err))
-		fmt.Printf("Validation error: %+v\n", err)
 
-		// Если ошибка является ошибкой валидации.
+		// If the error is a validation error.
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			errorMessages := make(map[string]string)
-			for _, validationErr := range validationErrors {
-				field := validationErr.Field() // Поле, которое не прошло проверку
-				tag := validationErr.Tag()     // Тег правила, которое не прошло
-				switch tag {
-				case "required":
-					errorMessages[field] = "This field is required"
-				case "min":
-					errorMessages[field] = "The field does not meet the minimum length requirement"
-				case "img_base64_or_null":
-					errorMessages[field] = "The field must be null or a valid Base64 string"
-				default:
-					errorMessages[field] = "Validation failed on tag: " + tag
-				}
-			}
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   "Validation error",
-				"details": errorMessages,
-			})
+			errorDetails := h.formatValidationErrors(validationErrors)
+			return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
 		}
 
-		// Если ошибка не связана с валидацией.
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid input",
-		})
+		// For other validation errors.
+		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid input", nil).Send(c)
 	}
 
-	// Создание новой статьи через сервис.
+	// Create a new article via the service.
 	article, err := h.service.CreateArticle(c.Context(), req)
 	if err != nil {
 		h.logger.Error("Failed to create article", zap.Error(err))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to create article",
-		})
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to create article", nil).Send(c)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(article)
 }
 
-// GetAllArticles - обработчик для получения всех статей с пагинацией.
+// GetAllArticles handles fetching all articles with pagination.
 func (h *ArticleHandler) GetAllArticles(c *fiber.Ctx) error {
 	h.logger.Info("Received request to fetch paginated articles")
 
-	// Получение номера страницы
+	// Parse the page number.
 	pageStr := c.Query("page", "1")
 	pageNumber, err := strconv.Atoi(pageStr)
 	if err != nil || pageNumber < 1 {
 		pageNumber = 1
 	}
 
-	// Получение размера страницы
+	// Parse the page size.
 	sizeStr := c.Query("size", "10")
 	pageSize, err := strconv.Atoi(sizeStr)
 	if err != nil || pageSize < 1 {
 		pageSize = 10
 	}
 
+	// Fetch articles via the service.
 	articles, err := h.service.GetAllArticles(c.Context(), pageNumber, pageSize)
 	if err != nil {
 		h.logger.Error("Failed to fetch paginated articles", zap.Error(err))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch articles",
-		})
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to fetch articles", nil).Send(c)
 	}
 
 	h.logger.Info("Paginated articles fetched successfully",
@@ -160,4 +100,29 @@ func (h *ArticleHandler) GetAllArticles(c *fiber.Ctx) error {
 	)
 
 	return c.Status(fiber.StatusOK).JSON(articles)
+}
+
+// formatValidationErrors formats validation errors into an array of ErrorItem.
+func (h *ArticleHandler) formatValidationErrors(validationErrors validator.ValidationErrors) []http_error.ErrorItem {
+	var errorDetails []http_error.ErrorItem
+	for _, validationErr := range validationErrors {
+		field := validationErr.Field() // The field that failed validation
+		tag := validationErr.Tag()     // The validation tag that failed
+		var errorMsg string
+		switch tag {
+		case "required":
+			errorMsg = "This field is required"
+		case "min":
+			errorMsg = "The field does not meet the minimum length requirement"
+		case "img_base64_or_null":
+			errorMsg = "The field must be null or a valid Base64 string"
+		default:
+			errorMsg = "Validation failed on tag: " + tag
+		}
+		errorDetails = append(errorDetails, http_error.ErrorItem{
+			Field: field,
+			Error: errorMsg,
+		})
+	}
+	return errorDetails
 }

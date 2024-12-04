@@ -16,11 +16,11 @@ type Paginate[T any] struct {
 
 // RowArticle - структура для хранения данных статьи.
 type RowArticle struct {
-	ID    primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Text  string             `json:"text,omitempty" bson:"text,omitempty"`
-	Title string             `json:"title,omitempty" bson:"title,omitempty"`
-	Img   *string            `json:"img,omitempty" bson:"img,omitempty"`
-	Date  time.Time          `json:"date,omitempty" bson:"date,omitempty"`
+	ID    primitive.ObjectID `bson:"_id"`
+	Text  string             `bson:"text"`
+	Title string             `bson:"title"`
+	Img   *string            `bson:"img"`
+	Date  time.Time          `bson:"date"`
 }
 
 type ArticleResponse struct {

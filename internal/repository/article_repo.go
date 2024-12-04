@@ -5,6 +5,7 @@ import (
 	"edjr-trk/internal/model"
 	"edjr-trk/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -12,7 +13,7 @@ import (
 
 // ArticleRepositoryInterface - интерфейс для работы с коллекцией статей.
 type ArticleRepositoryInterface interface {
-	//Create(ctx context.Context, article RowArticle) (primitive.ObjectID, error)
+	Create(ctx context.Context, article model.RowArticle) (model.RowArticle, error)
 	//GetByID(ctx context.Context, id primitive.ObjectID) (*RowArticle, error)
 	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int64, error)
 }
@@ -85,4 +86,26 @@ func (r *articleRepository) GetAll(ctx context.Context, pageNumber, pageSize int
 	)
 
 	return articles, totalCount, nil
+}
+
+// Create -create new article
+func (r *articleRepository) Create(ctx context.Context, article model.RowArticle) (model.RowArticle, error) {
+	// Вставка статьи в коллекцию.
+	result, err := r.collection.InsertOne(ctx, article)
+	if err != nil {
+		r.logger.Error("Failed to insert article", zap.Error(err))
+		return model.RowArticle{}, err
+	}
+
+	// Checking and converting InsertedID to ObjectID
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		r.logger.Error("Inserted ID is not of type ObjectID")
+		return model.RowArticle{}, err
+	}
+
+	article.ID = insertedID
+	r.logger.Info("Article created successfully", zap.String("id", article.ID.Hex()))
+
+	return article, nil
 }

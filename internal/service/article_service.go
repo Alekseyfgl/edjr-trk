@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"edjr-trk/internal/api/dto"
 	"edjr-trk/internal/model"
 	"edjr-trk/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
+	"time"
 )
 
 type ArticleService struct {
@@ -14,7 +17,7 @@ type ArticleService struct {
 
 // ArticleServiceInterface - интерфейс для работы с сервисом статей.
 type ArticleServiceInterface interface {
-	//CreateArticle(ctx context.Context, article repository.RowArticle) (primitive.ObjectID, error)
+	CreateArticle(ctx context.Context, dto dto.CreateArticleRequest) (model.ArticleResponse, error)
 	//GetArticleByID(ctx context.Context, id string) (*repository.RowArticle, error)
 	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error)
 }
@@ -55,4 +58,30 @@ func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSiz
 	)
 
 	return result, nil
+}
+
+// CreateArticle - создаёт новую статью.
+func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticleRequest) (model.ArticleResponse, error) {
+	s.logger.Info("Creating a new article", zap.String("title", req.Title))
+
+	// Создание новой статьи.
+	newArticle := model.RowArticle{
+		ID:    primitive.NewObjectID(),
+		Title: req.Title,
+		Text:  req.Text,
+		Img:   req.Img,
+		Date:  time.Now(), // Используем primitive.DateTime для MongoDB
+	}
+
+	// Сохранение статьи в репозитории.
+	createdArticle, err := s.repo.Create(ctx, newArticle)
+	if err != nil {
+		s.logger.Error("Failed to save article", zap.Error(err))
+		return model.ArticleResponse{}, err
+	}
+
+	transformedResp := newArticle.CreateArtResp()
+
+	s.logger.Info("Article created successfully", zap.String("id", createdArticle.ID.Hex()))
+	return transformedResp, nil
 }

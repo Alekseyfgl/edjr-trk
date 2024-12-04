@@ -7,7 +7,7 @@ import (
 
 // RegisterArticleRoutes - регистрирует маршруты для работы со статьями
 func RegisterArticleRoutes(app *fiber.App, container *ioc.Container) {
-	//app.Post("/articles", container.ArticleHandler.CreateArticle)
+	app.Post("/articles", container.ArticleHandler.CreateArticle)
 	//app.Get("/articles/:id", container.ArticleHandler.GetArticle)
 	app.Get("/articles", container.ArticleHandler.GetAllArticles)
 }

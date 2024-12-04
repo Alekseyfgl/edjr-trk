@@ -28,9 +28,14 @@ type ErrorItem struct {
 // Returns:
 //   - A pointer to an HTTPError instance.
 func NewHTTPError(statusCode int, message string, details []ErrorItem) *HTTPError {
-	// Convert all field names to lowercase.
-	for i, detail := range details {
-		details[i].Field = strings.ToLower(detail.Field)
+	// Если details == nil, устанавливаем пустой массив
+	if details == nil {
+		details = []ErrorItem{}
+	} else {
+		// Преобразуем названия полей в lowercase
+		for i := range details {
+			details[i].Field = strings.ToLower(details[i].Field)
+		}
 	}
 
 	return &HTTPError{

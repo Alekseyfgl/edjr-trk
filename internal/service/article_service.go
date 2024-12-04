@@ -18,7 +18,7 @@ type ArticleService struct {
 // ArticleServiceInterface - интерфейс для работы с сервисом статей.
 type ArticleServiceInterface interface {
 	CreateArticle(ctx context.Context, dto dto.CreateArticleRequest) (model.ArticleResponse, error)
-	//GetArticleByID(ctx context.Context, id string) (*repository.RowArticle, error)
+	GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error)
 	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error)
 }
 
@@ -85,3 +85,58 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticl
 	s.logger.Info("Article created successfully", zap.String("id", createdArticle.ID.Hex()))
 	return transformedResp, nil
 }
+
+func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error) {
+	article, err := s.repo.GetArticleById(ctx, id)
+	if err != nil {
+		s.logger.Error("Failed to save article", zap.Error(err))
+		return &model.ArticleResponse{}, err
+	}
+
+	if article == nil {
+		s.logger.Error("Failed to save article", zap.Error(err))
+		return &model.ArticleResponse{}, nil
+	}
+
+	result := article.CreateArtResp()
+	return &result, err
+}
+
+// UpdateArticle - обновляет существующую статью частично.
+//func (s *ArticleService) UpdateArticle(ctx context.Context, id int, req dto.PatchArticleRequest) (model.ArticleResponse, error) {
+//	s.logger.Info("Updating article", zap.Int("articleID", id))
+//
+//	// Получаем статью из репозитория по ID.
+//	existingArticle, err := s.repo.GetByID(ctx, id)
+//	if err != nil {
+//		s.logger.Error("Failed to fetch article by ID", zap.Int("articleID", id), zap.Error(err))
+//		return model.ArticleResponse{}, err
+//	}
+//
+//	// Обновляем только те поля, которые были переданы в запросе.
+//	if req.Title != nil {
+//		existingArticle.Title = *req.Title
+//	}
+//	if req.Text != nil {
+//		existingArticle.Text = *req.Text
+//	}
+//	if req.Img != nil {
+//		existingArticle.Img = req.Img
+//	}
+//
+//	// Устанавливаем новое значение времени последнего обновления.
+//	existingArticle.Date = time.Now()
+//
+//	// Сохраняем обновленную статью в репозитории.
+//	updatedArticle, err := s.repo.Update(ctx, existingArticle)
+//	if err != nil {
+//		s.logger.Error("Failed to update article", zap.Int("articleID", id), zap.Error(err))
+//		return model.ArticleResponse{}, err
+//	}
+//
+//	// Преобразуем обновленную статью в ответную структуру.
+//	transformedResp := updatedArticle.CreateArtResp()
+//
+//	s.logger.Info("Article updated successfully", zap.Int("articleID", id))
+//	return transformedResp, nil
+//}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"edjr-trk/internal/model"
 	"edjr-trk/pkg/utils"
+	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,7 +16,7 @@ import (
 // ArticleRepositoryInterface - интерфейс для работы с коллекцией статей.
 type ArticleRepositoryInterface interface {
 	Create(ctx context.Context, article model.RowArticle) (model.RowArticle, error)
-	//GetByID(ctx context.Context, id primitive.ObjectID) (*RowArticle, error)
+	GetArticleById(ctx context.Context, id string) (*model.RowArticle, error)
 	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int64, error)
 }
 
@@ -108,4 +110,32 @@ func (r *articleRepository) Create(ctx context.Context, article model.RowArticle
 	r.logger.Info("Article created successfully", zap.String("id", article.ID.Hex()))
 
 	return article, nil
+}
+
+// GetArticleById - находит статью по ObjectID.
+func (r *articleRepository) GetArticleById(ctx context.Context, id string) (*model.RowArticle, error) {
+	r.logger.Info("Start GetArticleById", zap.String("id", id))
+
+	var article model.RowArticle
+
+	// Преобразование строки в ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		r.logger.Error("Invalid ID format", zap.String("id", id), zap.Error(err))
+		return nil, fmt.Errorf("invalid id format: %w", err)
+	}
+
+	// Поиск статьи по ID в коллекции MongoDB.
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&article)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			r.logger.Warn("Article not found", zap.String("id", id))
+			return nil, mongo.ErrNoDocuments
+		}
+		r.logger.Error("Failed to query database", zap.String("id", id), zap.Error(err))
+		return nil, fmt.Errorf("failed to query database: %w", err)
+	}
+
+	r.logger.Info("Article found", zap.String("id", article.ID.Hex()))
+	return &article, nil
 }

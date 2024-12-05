@@ -1,8 +1,7 @@
-package middlewares
+package validators
 
 import (
 	"edjr-trk/internal/api/dto"
-	"edjr-trk/internal/api/validators"
 	"edjr-trk/pkg/http_error"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -21,7 +20,7 @@ func ValidateCreateArticleMiddleware(logger *zap.Logger) fiber.Handler {
 
 		// Create a validator and register custom validators.
 		validate := validator.New()
-		validators.RegArticleValidators(validate)
+		RegArticleValidators(validate)
 
 		// Validate the input data.
 		if err := validate.Struct(&req); err != nil {

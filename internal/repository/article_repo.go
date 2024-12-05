@@ -19,6 +19,7 @@ type ArticleRepositoryInterface interface {
 	PatchArticleById(ctx context.Context, dto *dto.PatchArticleRequest, id string) (*model.RowArticle, error)
 	GetArticleById(ctx context.Context, id string) (*model.RowArticle, error)
 	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int64, error)
+	RemoveArticleById(ctx context.Context, id string) error
 }
 
 // articleRepository - конкретная реализация интерфейса.
@@ -193,4 +194,23 @@ func (r *articleRepository) PatchArticleById(ctx context.Context, dto *dto.Patch
 	}
 
 	return updatedArticle, nil
+}
+
+// RemoveArticleById - находит статью по ObjectID.
+func (r *articleRepository) RemoveArticleById(ctx context.Context, id string) error {
+	// Преобразование строки в ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		r.logger.Error("Invalid ID format", zap.String("id", id), zap.Error(err))
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		r.logger.Error("Failed to delete article", zap.String("id", id), zap.Error(err))
+		return err
+	}
+
+	r.logger.Info("Article successfully deleted", zap.String("id", id))
+	return nil
 }

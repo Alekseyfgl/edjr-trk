@@ -18,6 +18,7 @@ type ArticleService struct {
 // ArticleServiceInterface - интерфейс для работы с сервисом статей.
 type ArticleServiceInterface interface {
 	CreateArticle(ctx context.Context, dto dto.CreateArticleRequest) (*model.ArticleResponse, error)
+	RemoveArticleById(ctx context.Context, id string) (string, error)
 	PatchArticleById(ctx context.Context, dto dto.PatchArticleRequest, id string) (*model.ArticleResponse, error)
 	GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error)
 	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[*model.ArticleResponse], error)
@@ -85,11 +86,6 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticl
 	return transformedResp, nil
 }
 
-//// CreateArticle - создаёт новую статью.
-//func (s *ArticleService) PatchArticle(ctx context.Context, id string, dto dto.PatchArticleRequest) (model.ArticleResponse, error) {
-//
-//}
-
 func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error) {
 	article, err := s.repo.GetArticleById(ctx, id)
 	if err != nil {
@@ -101,7 +97,7 @@ func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.
 	return result, err
 }
 
-// UpdateArticle - обновляет существующую статью частично.
+// PatchArticleById - обновляет существующую статью частично.
 func (s *ArticleService) PatchArticleById(ctx context.Context, dto dto.PatchArticleRequest, id string) (*model.ArticleResponse, error) {
 	patchedArticle, err := s.repo.PatchArticleById(ctx, &dto, id)
 
@@ -111,4 +107,16 @@ func (s *ArticleService) PatchArticleById(ctx context.Context, dto dto.PatchArti
 	}
 	transformedResp := patchedArticle.CreateArtResp()
 	return transformedResp, nil
+}
+
+// RemoveArticleById - обновляет существующую статью частично.
+func (s *ArticleService) RemoveArticleById(ctx context.Context, id string) (string, error) {
+	err := s.repo.RemoveArticleById(ctx, id)
+
+	if err != nil {
+		s.logger.Error("Failed to save article", zap.Error(err))
+		return "", err
+	}
+
+	return id, nil
 }

@@ -1,5 +1,5 @@
 // internal/api/validators/article_validators.go
-package validators
+package dto_validator
 
 import (
 	"encoding/base64"

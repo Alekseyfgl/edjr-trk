@@ -1,5 +1,5 @@
 // internal/api/middlewares/validate_article_id.go
-package validators
+package param_validator
 
 import (
 	"edjr-trk/pkg/http_error"

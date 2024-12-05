@@ -1,5 +1,5 @@
 // internal/api/middlewares/validate_pagination.go
-package validators
+package dto_validator
 
 import (
 	"edjr-trk/pkg/http_error"

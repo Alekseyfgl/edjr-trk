@@ -1,4 +1,4 @@
-package validators
+package dto_validator
 
 import (
 	"edjr-trk/internal/api/dto"

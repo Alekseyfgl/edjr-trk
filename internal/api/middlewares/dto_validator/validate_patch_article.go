@@ -1,5 +1,5 @@
 // internal/api/middlewares/validate_patch_article.go
-package validators
+package dto_validator
 
 import (
 	"edjr-trk/internal/api/dto"

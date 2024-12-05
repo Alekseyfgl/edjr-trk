@@ -153,60 +153,65 @@ func (h *ArticleHandler) GetArticleById(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(article)
 }
 
-//// PatchArticle handles partial updates of an article.
-//func (h *ArticleHandler) PatchArticle(c *fiber.Ctx) error {
-//	h.logger.Info("Received request to patch an article")
-//
-//	// Получаем ID статьи из параметров маршрута.
-//	articleID := c.Params("id")
-//	if articleID == "" {
-//		h.logger.Error("Article ID is missing in the request")
-//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Article ID is required", nil).Send(c)
-//	}
-//
-//	// Преобразуем ID статьи в int.
-//	id, err := strconv.Atoi(articleID)
-//	if err != nil {
-//		h.logger.Error("Invalid article ID", zap.String("articleID", articleID), zap.Error(err))
-//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Article ID must be a number", nil).Send(c)
-//	}
-//
-//	// Парсим входящие данные.
-//	var req dto.PatchArticleRequest
-//	if err := c.BodyParser(&req); err != nil {
-//		h.logger.Error("Failed to parse request body", zap.Error(err))
-//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)
-//	}
-//
-//	// Проверяем валидность входящих данных.
-//	if err := h.ValidateStruct(&req); err != nil {
-//		h.logger.Error("Validation failed for request body", zap.Error(err))
-//
-//		var validationErrors validator.ValidationErrors
-//		if errors.As(err, &validationErrors) {
-//			// Форматируем ошибки валидации
-//			errorDetails := h.formatValidationErrors(validationErrors)
-//			return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
-//		}
-//
-//		// Для других типов ошибок
-//		if _, ok := err.(*validator.InvalidValidationError); ok {
-//			h.logger.Error("Invalid validation configuration", zap.Error(err))
-//			return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid validation configuration", nil).Send(c)
-//		}
-//
-//		// Неизвестная ошибка валидации
-//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid input", nil).Send(c)
-//	}
-//
-//	// Обновляем статью через сервис.
-//	updatedArticle, err := h.service.UpdateArticle(c.Context(), id, req)
-//	if err != nil {
-//		h.logger.Error("Failed to update article", zap.Int("articleID", id), zap.Error(err))
-//		// Общая ошибка сервера
-//		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to update article", nil).Send(c)
-//	}
-//
-//	h.logger.Info("Article updated successfully", zap.Int("articleID", id))
-//	return c.Status(fiber.StatusOK).JSON(updatedArticle)
-//}
+// PatchArticleById handles partial updates of an article.
+func (h *ArticleHandler) PatchArticleById(c *fiber.Ctx) error {
+	h.logger.Info("Received request to patch an article")
+
+	// Получаем ID статьи из параметров маршрута.
+	articleID := c.Params("id")
+	if articleID == "" {
+		h.logger.Error("Article ID is missing in the request")
+		return http_error.NewHTTPError(fiber.StatusBadRequest, "Article ID is required", nil).Send(c)
+	}
+
+	// Парсим входящие данные.
+	var req dto.PatchArticleRequest
+	if err := c.BodyParser(&req); err != nil {
+		h.logger.Error("Failed to parse request body", zap.Error(err))
+		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)
+	}
+
+	// Validate the input data.
+	if err := h.ValidateStruct(&req); err != nil {
+		h.logger.Error("Validation failed for request body", zap.Error(err))
+
+		// If the error is a validation error.
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			errorDetails := h.formatValidationErrors(validationErrors)
+			return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
+		}
+
+		// For other validation errors.
+		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid input", nil).Send(c)
+	}
+	//// Проверяем валидность входящих данных.
+	//if err := h.ValidateStruct(&req); err != nil {
+	//	h.logger.Error("Validation failed for request body", zap.Error(err))
+	//
+	//	var validationErrors validator.ValidationErrors
+	//	if errors.As(err, &validationErrors) {
+	//		// Форматируем ошибки валидации
+	//		errorDetails := h.formatValidationErrors(validationErrors)
+	//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
+	//	}
+	//
+	//	// Для других типов ошибок
+	//	if _, ok := err.(*validator.InvalidValidationError); ok {
+	//		h.logger.Error("Invalid validation configuration", zap.Error(err))
+	//		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid validation configuration", nil).Send(c)
+	//	}
+	//
+	//	// Неизвестная ошибка валидации
+	//	return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid input", nil).Send(c)
+	//}
+
+	// Обновляем статью через сервис.
+	updatedArticle, err := h.service.PatchArticleById(c.Context(), req, articleID)
+	if err != nil {
+		h.logger.Error("Failed to update article", zap.String("articleID", articleID), zap.Error(err))
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to update article", nil).Send(c)
+	}
+
+	h.logger.Info("Article updated successfully", zap.String("articleID", articleID))
+	return c.Status(fiber.StatusOK).JSON(updatedArticle)
+}

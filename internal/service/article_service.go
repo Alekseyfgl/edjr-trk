@@ -17,9 +17,10 @@ type ArticleService struct {
 
 // ArticleServiceInterface - интерфейс для работы с сервисом статей.
 type ArticleServiceInterface interface {
-	CreateArticle(ctx context.Context, dto dto.CreateArticleRequest) (model.ArticleResponse, error)
+	CreateArticle(ctx context.Context, dto dto.CreateArticleRequest) (*model.ArticleResponse, error)
+	PatchArticleById(ctx context.Context, dto dto.PatchArticleRequest, id string) (*model.ArticleResponse, error)
 	GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error)
-	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error)
+	GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[*model.ArticleResponse], error)
 }
 
 // NewArticleService - создаёт новый экземпляр ArticleService.
@@ -28,7 +29,7 @@ func NewArticleService(repo repository.ArticleRepositoryInterface, logger *zap.L
 }
 
 // GetAllArticles - получает статьи с пагинацией.
-func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[model.ArticleResponse], error) {
+func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[*model.ArticleResponse], error) {
 	articles, totalCount, err := s.repo.GetAll(ctx, pageNumber, pageSize)
 	if err != nil {
 		s.logger.Error("Failed to fetch all articles", zap.Error(err))
@@ -36,13 +37,13 @@ func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSiz
 	}
 
 	// Преобразуем RowArticle в ArticleResponse
-	transformedResp := make([]model.ArticleResponse, len(articles))
+	transformedResp := make([]*model.ArticleResponse, len(articles))
 	for i, article := range articles {
 		transformedResp[i] = article.CreateArtResp()
 	}
 
 	// Формируем структуру Paginate с типом ArticleResponse
-	result := &model.Paginate[model.ArticleResponse]{
+	result := &model.Paginate[*model.ArticleResponse]{
 		PageNumber:    pageNumber,
 		RowTotalCount: int(totalCount),
 		CurrentPage:   pageNumber,
@@ -61,9 +62,7 @@ func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSiz
 }
 
 // CreateArticle - создаёт новую статью.
-func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticleRequest) (model.ArticleResponse, error) {
-	s.logger.Info("Creating a new article", zap.String("title", req.Title))
-
+func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticleRequest) (*model.ArticleResponse, error) {
 	// Создание новой статьи.
 	newArticle := model.RowArticle{
 		ID:    primitive.NewObjectID(),
@@ -77,7 +76,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticl
 	createdArticle, err := s.repo.Create(ctx, newArticle)
 	if err != nil {
 		s.logger.Error("Failed to save article", zap.Error(err))
-		return model.ArticleResponse{}, err
+		return nil, err
 	}
 
 	transformedResp := newArticle.CreateArtResp()
@@ -86,6 +85,11 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req dto.CreateArticl
 	return transformedResp, nil
 }
 
+//// CreateArticle - создаёт новую статью.
+//func (s *ArticleService) PatchArticle(ctx context.Context, id string, dto dto.PatchArticleRequest) (model.ArticleResponse, error) {
+//
+//}
+
 func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.ArticleResponse, error) {
 	article, err := s.repo.GetArticleById(ctx, id)
 	if err != nil {
@@ -93,50 +97,18 @@ func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.
 		return &model.ArticleResponse{}, err
 	}
 
-	if article == nil {
-		s.logger.Error("Failed to save article", zap.Error(err))
-		return &model.ArticleResponse{}, nil
-	}
-
 	result := article.CreateArtResp()
-	return &result, err
+	return result, err
 }
 
 // UpdateArticle - обновляет существующую статью частично.
-//func (s *ArticleService) UpdateArticle(ctx context.Context, id int, req dto.PatchArticleRequest) (model.ArticleResponse, error) {
-//	s.logger.Info("Updating article", zap.Int("articleID", id))
-//
-//	// Получаем статью из репозитория по ID.
-//	existingArticle, err := s.repo.GetByID(ctx, id)
-//	if err != nil {
-//		s.logger.Error("Failed to fetch article by ID", zap.Int("articleID", id), zap.Error(err))
-//		return model.ArticleResponse{}, err
-//	}
-//
-//	// Обновляем только те поля, которые были переданы в запросе.
-//	if req.Title != nil {
-//		existingArticle.Title = *req.Title
-//	}
-//	if req.Text != nil {
-//		existingArticle.Text = *req.Text
-//	}
-//	if req.Img != nil {
-//		existingArticle.Img = req.Img
-//	}
-//
-//	// Устанавливаем новое значение времени последнего обновления.
-//	existingArticle.Date = time.Now()
-//
-//	// Сохраняем обновленную статью в репозитории.
-//	updatedArticle, err := s.repo.Update(ctx, existingArticle)
-//	if err != nil {
-//		s.logger.Error("Failed to update article", zap.Int("articleID", id), zap.Error(err))
-//		return model.ArticleResponse{}, err
-//	}
-//
-//	// Преобразуем обновленную статью в ответную структуру.
-//	transformedResp := updatedArticle.CreateArtResp()
-//
-//	s.logger.Info("Article updated successfully", zap.Int("articleID", id))
-//	return transformedResp, nil
-//}
+func (s *ArticleService) PatchArticleById(ctx context.Context, dto dto.PatchArticleRequest, id string) (*model.ArticleResponse, error) {
+	patchedArticle, err := s.repo.PatchArticleById(ctx, &dto, id)
+
+	if err != nil {
+		s.logger.Error("Failed to save article", zap.Error(err))
+		return nil, err
+	}
+	transformedResp := patchedArticle.CreateArtResp()
+	return transformedResp, nil
+}

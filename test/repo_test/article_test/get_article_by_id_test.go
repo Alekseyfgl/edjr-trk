@@ -1,9 +1,10 @@
-package article_repo
+package article_test
 
 import (
 	"context"
 	"edjr-trk/configs/env"
 	"edjr-trk/configs/mongo"
+	"edjr-trk/internal/api/dto"
 	"edjr-trk/internal/repository"
 	"edjr-trk/pkg/log"
 	"fmt"
@@ -74,4 +75,38 @@ func TestGetArticleById(t *testing.T) {
 		// Проверяем, что вернулась ошибка mongo.ErrNoDocuments
 		assert.ErrorIs(t, err, m.ErrNoDocuments)
 	})
+}
+
+func TestPatchArticleById(t *testing.T) {
+	ctx, repo := setup()
+
+	// Подготовка тестовых данных
+	validID := "674b0981fd898a8a128c5ffb"
+	body := dto.PatchArticleRequest{Text: ptr("Updated 222")}
+
+	t.Run("Success", func(t *testing.T) {
+		// Выполняем обновление
+		patchedData, err := repo.PatchArticleById(ctx, &body, validID)
+
+		if err != nil {
+			fmt.Printf("err: %+v\n", err)
+		}
+		fmt.Printf("patchedData: %+v\n", patchedData)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		invalidID := "674b0981fd898a8a128c5fff"
+
+		// Выполняем обновление
+		updatedArticle, err := repo.PatchArticleById(ctx, &body, invalidID)
+
+		fmt.Printf("updatedArticle: %+v\n", updatedArticle)
+		fmt.Printf("err: %+v\n", err)
+		assert.Error(t, err)
+		assert.Nil(t, updatedArticle)
+	})
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

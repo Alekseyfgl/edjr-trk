@@ -31,8 +31,8 @@ type ArticleResponse struct {
 	Date  time.Time          `json:"date,omitempty"`
 }
 
-func (ar *RowArticle) CreateArtResp() ArticleResponse {
-	return ArticleResponse{
+func (ar *RowArticle) CreateArtResp() *ArticleResponse {
+	return &ArticleResponse{
 		ID:    ar.ID,
 		Title: ar.Title,
 		Text:  ar.Text,

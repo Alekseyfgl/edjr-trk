@@ -37,25 +37,12 @@ func (h *ArticleHandler) ValidateStruct(input interface{}) error {
 func (h *ArticleHandler) CreateArticle(c *fiber.Ctx) error {
 	h.logger.Info("Received request to create a new article")
 
-	// Parse the input data.
-	var req dto.CreateArticleRequest
-	if err := c.BodyParser(&req); err != nil {
-		h.logger.Error("Failed to parse request body", zap.Error(err))
-		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)
-	}
-
-	// Validate the input data.
-	if err := h.ValidateStruct(&req); err != nil {
-		h.logger.Error("Validation failed for request body", zap.Error(err))
-
-		// If the error is a validation error.
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			errorDetails := h.formatValidationErrors(validationErrors)
-			return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
-		}
-
-		// For other validation errors.
-		return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid input", nil).Send(c)
+	// Retrieve validated data from context.
+	reqInterface := c.Locals("validatedBody")
+	req, ok := reqInterface.(dto.CreateArticleRequest)
+	if !ok {
+		h.logger.Error("Failed to retrieve validated request from context")
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Internal Server Error", nil).Send(c)
 	}
 
 	// Create a new article via the service.

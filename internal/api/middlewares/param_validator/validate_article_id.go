@@ -1,4 +1,3 @@
-// internal/api/middlewares/validate_article_id.go
 package param_validator
 
 import (

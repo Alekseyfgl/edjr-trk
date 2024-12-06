@@ -1,4 +1,3 @@
-// internal/api/validators/article_validators.go
 package dto_validator
 
 import (

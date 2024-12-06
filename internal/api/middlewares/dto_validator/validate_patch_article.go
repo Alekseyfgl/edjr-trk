@@ -1,4 +1,3 @@
-// internal/api/middlewares/validate_patch_article.go
 package dto_validator
 
 import (

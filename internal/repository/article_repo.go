@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"edjr-trk/configs/env"
 	"edjr-trk/internal/api/dto"
 	"edjr-trk/internal/model"
 	"edjr-trk/pkg/utils"
@@ -31,7 +32,8 @@ type articleRepository struct {
 // NewArticleRepository - создаёт новый экземпляр репозитория статей.
 func NewArticleRepository(client *mongo.Client, logger *zap.Logger) ArticleRepositoryInterface {
 	return &articleRepository{
-		collection: client.Database("test").Collection("articles"),
+		//collection: client.Database("test").Collection("articles"),
+		collection: client.Database(env.GetEnv("MONGO_DB_NAME", "")).Collection("articles"),
 		logger:     logger,
 	}
 }

@@ -1,4 +1,3 @@
-// internal/api/middlewares/validate_pagination.go
 package dto_validator
 
 import (

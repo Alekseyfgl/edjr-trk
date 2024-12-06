@@ -31,6 +31,22 @@ func imgBase64OrNull(fl validator.FieldLevel) bool {
 		return true
 	}
 
+	// Define allowed prefixes for Base64 data URIs
+	allowedPrefixes := []string{
+		"data:image/jpeg;base64,", // JPEG
+		"data:image/png;base64,",  // PNG
+		"data:image/gif;base64,",  // GIF
+		"data:image/webp;base64,", // WebP
+	}
+
+	// Remove any allowed prefix
+	for _, prefix := range allowedPrefixes {
+		if len(str) > len(prefix) && str[:len(prefix)] == prefix {
+			str = str[len(prefix):] // Remove the prefix
+			break
+		}
+	}
+
 	// Try to decode the Base64 string
 	_, err := base64.StdEncoding.DecodeString(str)
 	return err == nil

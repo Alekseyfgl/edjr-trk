@@ -39,12 +39,19 @@ func imgBase64OrNull(fl validator.FieldLevel) bool {
 		"data:image/webp;base64,", // WebP
 	}
 
-	// Remove any allowed prefix
+	// Check if the string starts with any allowed prefix
+	hasValidPrefix := false
 	for _, prefix := range allowedPrefixes {
 		if len(str) > len(prefix) && str[:len(prefix)] == prefix {
+			hasValidPrefix = true
 			str = str[len(prefix):] // Remove the prefix
 			break
 		}
+	}
+
+	// If no valid prefix was found, the string is invalid
+	if !hasValidPrefix {
+		return false
 	}
 
 	// Try to decode the Base64 string

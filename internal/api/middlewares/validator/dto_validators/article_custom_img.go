@@ -1,15 +1,9 @@
-package validate_article
+package dto_validators
 
 import (
 	"encoding/base64"
 	"github.com/go-playground/validator/v10"
 )
-
-// RegArticleValidators registers custom validators for articles.
-func RegArticleValidators(validate *validator.Validate) {
-	// Register the custom validator 'img_base64_or_null'.
-	validate.RegisterValidation("img_base64_or_null", imgBase64OrNull)
-}
 
 // imgBase64OrNull checks if a string is either empty, null, or a valid Base64-encoded string.
 func imgBase64OrNull(fl validator.FieldLevel) bool {

@@ -1,4 +1,4 @@
-package param_validator
+package dto_validators
 
 import (
 	"edjr-trk/pkg/http_error"
@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func ValidateArticleIDMiddleware(logger *zap.Logger) fiber.Handler {
+func ValidateArticleIdMiddleware(logger *zap.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		articleID := c.Params("id")
 		if articleID == "" {

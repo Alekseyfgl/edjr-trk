@@ -1,4 +1,4 @@
-package validate_common_format
+package format_validation_error
 
 import (
 	"edjr-trk/pkg/http_error"
@@ -14,6 +14,7 @@ func FormatValidationErrors(validationErrors validator.ValidationErrors) []http_
 		"required":           "This field is required",
 		"min":                "The field does not meet the minimum length requirement",
 		"img_base64_or_null": "The field must be null or a valid Base64 string",
+		"custom_email":       "Invalid email",
 	}
 
 	for _, validationErr := range validationErrors {

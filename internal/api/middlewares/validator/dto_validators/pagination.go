@@ -1,4 +1,4 @@
-package validate_article
+package dto_validators
 
 import (
 	"edjr-trk/pkg/http_error"
@@ -9,7 +9,7 @@ import (
 
 func ValidatePaginationMiddleware(logger *zap.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Validate 'page' parameter
+		// validate 'page' parameter
 		pageStr := c.Query("page", "1")
 		pageNumber, err := strconv.Atoi(pageStr)
 		if err != nil || pageNumber < 1 {
@@ -17,7 +17,7 @@ func ValidatePaginationMiddleware(logger *zap.Logger) fiber.Handler {
 			return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid page number", nil).Send(c)
 		}
 
-		// Validate 'size' parameter
+		// validate 'size' parameter
 		sizeStr := c.Query("size", "10")
 		pageSize, err := strconv.Atoi(sizeStr)
 		if err != nil || pageSize < 1 {

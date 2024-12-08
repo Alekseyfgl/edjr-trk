@@ -1,8 +1,8 @@
-package validate_article
+package dto_validators
 
 import (
 	"edjr-trk/internal/api/dto"
-	"edjr-trk/internal/api/middlewares/dto_validator/validate_common_format"
+	"edjr-trk/internal/api/middlewares/validator/format_validation_error"
 	"edjr-trk/pkg/http_error"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -19,17 +19,13 @@ func ValidateCreateArticleMiddleware(logger *zap.Logger) fiber.Handler {
 			return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)
 		}
 
-		// Create a validator and register custom validators.
-		validate := validator.New()
-		RegArticleValidators(validate)
-
-		// Validate the input data.
+		// validate the input data.
 		if err := validate.Struct(&req); err != nil {
 			logger.Error("Validation failed for request body", zap.Error(err))
 
 			// If the error is a validation error.
 			if validationErrors, ok := err.(validator.ValidationErrors); ok {
-				errorDetails := validate_common_format.FormatValidationErrors(validationErrors)
+				errorDetails := format_validation_error.FormatValidationErrors(validationErrors)
 				return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
 			}
 

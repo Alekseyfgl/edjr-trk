@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"edjr-trk/internal/api/middlewares/dto_validator"
+	"edjr-trk/internal/api/middlewares/auth"
+	"edjr-trk/internal/api/middlewares/dto_validator/validate_article"
 	"edjr-trk/internal/api/middlewares/param_validator"
 	"edjr-trk/internal/ioc"
 	"github.com/gofiber/fiber/v2"
@@ -10,13 +11,13 @@ import (
 // RegisterArticleRoutes - регистрирует маршруты для работы со статьями
 func RegisterArticleRoutes(app *fiber.App, container *ioc.Container) {
 	app.Post("/articles",
-		dto_validator.ValidateCreateArticleMiddleware(container.Logger),
+		validate_article.ValidateCreateArticleMiddleware(container.Logger),
 		container.ArticleHandler.CreateArticle,
 	)
 
 	app.Patch("/articles/:id",
 		param_validator.ValidateArticleIDMiddleware(container.Logger),
-		dto_validator.ValidatePatchArticleMiddleware(container.Logger),
+		validate_article.ValidatePatchArticleMiddleware(container.Logger),
 		container.ArticleHandler.PatchArticleById,
 	)
 
@@ -32,7 +33,8 @@ func RegisterArticleRoutes(app *fiber.App, container *ioc.Container) {
 
 	app.Get("/articles",
 		//middlewares.AuthMiddleware,
-		dto_validator.ValidatePaginationMiddleware(container.Logger),
+		auth.BasicAuthMiddleware(),
+		validate_article.ValidatePaginationMiddleware(container.Logger),
 		container.ArticleHandler.GetAllArticles,
 	)
 }

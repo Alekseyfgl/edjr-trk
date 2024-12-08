@@ -6,7 +6,7 @@ import (
 	"edjr-trk/internal/repository"
 	"edjr-trk/internal/service"
 	"edjr-trk/pkg/log"
-	mongodb "go.mongodb.org/mongo-driver/mongo" // Импортируем MongoDB драйвер правильно
+	mongodb "go.mongodb.org/mongo-driver/mongo" // Импортируем MongoDB драйвер правильн
 	"go.uber.org/zap"
 )
 
@@ -15,8 +15,11 @@ type Container struct {
 	Logger         *zap.Logger
 	MongoClient    *mongodb.Client
 	ArticleRepo    repository.ArticleRepositoryInterface
+	UserRepo       repository.UserRepositoryInterface
 	ArticleService service.ArticleServiceInterface
+	UserService    service.UserServiceInterface
 	ArticleHandler *handlers.ArticleHandler
+	UserHandler    handlers.UserHandlerInterface
 }
 
 // NewContainer - создаем контейнер с зависимостями.
@@ -33,18 +36,26 @@ func NewContainer() *Container {
 	// Get global logger
 	logger := log.GetLogger()
 
-	// Create dependencies
+	// Create repositories
 	articleRepo := repository.NewArticleRepository(clientDB, logger)
-	articleService := service.NewArticleService(articleRepo, logger) // Передаём логгер
+	userRepo := repository.NewUserRepository(clientDB, logger)
+	// Create services
+	articleService := service.NewArticleService(articleRepo, logger)
+	userService := service.NewUserService(userRepo, logger)
+	// Create handlers
 	articleHandler := handlers.NewArticleHandler(articleService, logger)
+	userHandler := handlers.NewUserHandler(userService, logger)
 
 	// Return the container with all dependencies
 	return &Container{
 		Logger:         logger,
 		MongoClient:    clientDB,
-		ArticleRepo:    articleRepo, // Инъекция интерфейса
+		ArticleRepo:    articleRepo,
+		UserRepo:       userRepo,
 		ArticleService: articleService,
+		UserService:    userService,
 		ArticleHandler: articleHandler,
+		UserHandler:    userHandler,
 	}
 }
 

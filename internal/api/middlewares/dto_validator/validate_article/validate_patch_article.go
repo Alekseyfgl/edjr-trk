@@ -1,7 +1,8 @@
-package dto_validator
+package validate_article
 
 import (
 	"edjr-trk/internal/api/dto"
+	"edjr-trk/internal/api/middlewares/dto_validator/validate_common_format"
 	"edjr-trk/pkg/http_error"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,7 @@ func ValidatePatchArticleMiddleware(logger *zap.Logger) fiber.Handler {
 			logger.Error("Validation failed for request body", zap.Error(err))
 
 			if validationErrors, ok := err.(validator.ValidationErrors); ok {
-				errorDetails := formatValidationErrors(validationErrors)
+				errorDetails := validate_common_format.FormatValidationErrors(validationErrors)
 				return http_error.NewHTTPError(fiber.StatusBadRequest, "Validation error", errorDetails).Send(c)
 			}
 

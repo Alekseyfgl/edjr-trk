@@ -16,12 +16,14 @@ func RegisterArticleRoutes(app *fiber.App, container *ioc.Container) {
 	)
 
 	app.Patch("/articles/:id",
+		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateArticleIdMiddleware(container.Logger),
 		dto_validator.ValidatePatchArticleMiddleware(container.Logger),
 		container.ArticleHandler.PatchArticleById,
 	)
 
 	app.Delete("/articles/:id",
+		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateArticleIdMiddleware(container.Logger),
 		container.ArticleHandler.RemoveArticleById,
 	)

@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	"edjr-trk/configs/env"
 	"edjr-trk/configs/mongo"
 	"edjr-trk/internal/api/handlers"
 	"edjr-trk/internal/repository"
@@ -18,8 +19,11 @@ type Container struct {
 	UserRepo       repository.UserRepositoryInterface
 	ArticleService service.ArticleServiceInterface
 	UserService    service.UserServiceInterface
+	JwtService     service.JWTServiceInterface
+	AuthService    service.AuthServiceInterface
 	ArticleHandler *handlers.ArticleHandler
 	UserHandler    handlers.UserHandlerInterface
+	AuthHandler    handlers.AuthHandlerInterface
 }
 
 // NewContainer - создаем контейнер с зависимостями.
@@ -42,9 +46,12 @@ func NewContainer() *Container {
 	// Create services
 	articleService := service.NewArticleService(articleRepo, logger)
 	userService := service.NewUserService(userRepo, logger)
+	jwtService := service.NewJWTService(env.GetEnv("JWT_TOKEN", ""), logger)
+	authService := service.NewAuthService(userRepo, jwtService, logger)
 	// Create handlers
 	articleHandler := handlers.NewArticleHandler(articleService, logger)
 	userHandler := handlers.NewUserHandler(userService, logger)
+	authHandler := handlers.NewAuthHandler(authService, logger)
 
 	// Return the container with all dependencies
 	return &Container{
@@ -54,8 +61,10 @@ func NewContainer() *Container {
 		UserRepo:       userRepo,
 		ArticleService: articleService,
 		UserService:    userService,
+		JwtService:     jwtService,
 		ArticleHandler: articleHandler,
 		UserHandler:    userHandler,
+		AuthHandler:    authHandler,
 	}
 }
 

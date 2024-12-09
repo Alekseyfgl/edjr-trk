@@ -39,6 +39,7 @@ func main() {
 	// Register routes
 	routes.RegisterArticleRoutes(app, container)
 	routes.RegisterUserRoutes(app, container)
+	routes.RegisterAuthRoutes(app, container)
 
 	// Start the server
 	port := env.GetEnv("SERV_PORT", "3000")

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"edjr-trk/internal/api/middlewares/auth"
-	"edjr-trk/internal/api/middlewares/validator/dto_validators"
+	"edjr-trk/internal/api/middlewares/validator/dto_validator"
 	"edjr-trk/internal/ioc"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,19 +11,19 @@ import (
 func RegisterUserRoutes(app *fiber.App, container *ioc.Container) {
 	app.Post("/users",
 		auth.BasicAuthMiddleware(),
-		dto_validators.ValidateCreateUserMiddleware(container.Logger),
+		dto_validator.ValidateCreateUserMiddleware(container.Logger),
 		container.UserHandler.CreateUser,
 	)
 
 	app.Delete("/users/:id",
 		auth.BasicAuthMiddleware(),
-		dto_validators.ValidateUserIdMiddleware(container.Logger),
+		dto_validator.ValidateUserIdMiddleware(container.Logger),
 		container.UserHandler.RemoveUserById,
 	)
 
 	app.Get("/users",
 		auth.BasicAuthMiddleware(),
-		dto_validators.ValidatePaginationMiddleware(container.Logger),
+		dto_validator.ValidatePaginationMiddleware(container.Logger),
 		container.UserHandler.GetAllUsers,
 	)
 }

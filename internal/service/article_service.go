@@ -91,7 +91,7 @@ func (s *ArticleService) GetArticleById(ctx context.Context, id string) (*model.
 	article, err := s.repo.GetArticleById(ctx, id)
 	if err != nil {
 		s.logger.Error("Failed to save article", zap.Error(err))
-		return &model.ArticleResponse{}, err
+		return nil, err
 	}
 
 	result := article.CreateArtResp()

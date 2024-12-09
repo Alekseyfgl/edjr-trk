@@ -1,4 +1,4 @@
-package dto_validators
+package dto_validator
 
 import (
 	"edjr-trk/internal/api/dto"
@@ -9,11 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// ValidateCreateUserMiddleware validates the create user request.
-func ValidateCreateUserMiddleware(logger *zap.Logger) fiber.Handler {
+func ValidateLoginMiddleware(logger *zap.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Parse the input data.
-		var req dto.CreateUserRequest
+		var req dto.LoginRequest
 		if err := c.BodyParser(&req); err != nil {
 			logger.Error("Failed to parse request body", zap.Error(err))
 			return http_error.NewHTTPError(fiber.StatusBadRequest, "Invalid request body", nil).Send(c)

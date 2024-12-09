@@ -6,6 +6,7 @@ import (
 	configMongo "edjr-trk/configs/mongo"
 	"edjr-trk/internal/model"
 	"edjr-trk/pkg/utils"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,7 +18,9 @@ import (
 type UserRepositoryInterface interface {
 	CreateNewAdmin(ctx context.Context, user *model.RowUser) (*model.RowUser, error)
 	RemoveUserById(ctx context.Context, id string) error
-	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowUser, int, error)
+	GetAll(ctx context.Context, pageNumber, pageSize int) (*[]model.RowUser, int, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.RowUser, error)
+	GetUserById(ctx context.Context, id string) (*model.RowUser, error)
 }
 
 // userRepository - конкретная реализация интерфейса.
@@ -73,7 +76,7 @@ func (r *userRepository) RemoveUserById(ctx context.Context, id string) error {
 }
 
 // GetAll - get all articles with sort(desc) and pagination
-func (r *userRepository) GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowUser, int, error) {
+func (r *userRepository) GetAll(ctx context.Context, pageNumber, pageSize int) (*[]model.RowUser, int, error) {
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
@@ -126,5 +129,52 @@ func (r *userRepository) GetAll(ctx context.Context, pageNumber, pageSize int) (
 		zap.Int("fetchedItems", len(users)),
 	)
 
-	return users, totalCount, nil
+	return &users, totalCount, nil
+}
+
+func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*model.RowUser, error) {
+	r.logger.Info("Start GetUserByEmail", zap.String("email", email))
+
+	var user model.RowUser
+
+	// Поиск пользователя по email
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			r.logger.Warn("User not found", zap.String("email", email))
+			return nil, mongo.ErrNoDocuments
+		}
+		r.logger.Error("Failed to query database", zap.String("email", email), zap.Error(err))
+		return nil, err
+	}
+
+	r.logger.Info("User found", zap.String("email", user.Email))
+	return &user, nil
+}
+
+func (r *userRepository) GetUserById(ctx context.Context, id string) (*model.RowUser, error) {
+	r.logger.Info("Start GetArticleById", zap.String("id", id))
+
+	var user model.RowUser
+
+	// Преобразование строки в ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		r.logger.Error("Invalid ID format", zap.String("id", id), zap.Error(err))
+		return nil, err
+	}
+
+	// Поиск статьи по ID в коллекции MongoDB.
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			r.logger.Warn("User not found", zap.String("id", id))
+			return nil, mongo.ErrNoDocuments
+		}
+		r.logger.Error("Failed to query database", zap.String("id", id), zap.Error(err))
+		return nil, err
+	}
+
+	r.logger.Info("User found", zap.String("id", user.ID.Hex()))
+	return &user, nil
 }

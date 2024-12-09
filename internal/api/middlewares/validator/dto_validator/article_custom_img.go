@@ -1,4 +1,4 @@
-package dto_validators
+package dto_validator
 
 import (
 	"encoding/base64"

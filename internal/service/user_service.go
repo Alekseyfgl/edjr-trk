@@ -15,6 +15,7 @@ type UserServiceInterface interface {
 	CreateNewAdmin(ctx context.Context, dto *dto.CreateUserRequest) (*model.UserResponse, error)
 	RemoveUserById(ctx context.Context, id string) (string, error)
 	GetAllUsers(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[*model.UserResponse], error)
+	GetUserByEmail(ctx context.Context, email string) (*model.UserResponse, error)
 }
 
 type userService struct {
@@ -70,22 +71,32 @@ func (s *userService) RemoveUserById(ctx context.Context, id string) (string, er
 }
 
 func (s *userService) GetAllUsers(ctx context.Context, pageNumber, pageSize int) (*model.Paginate[*model.UserResponse], error) {
-	users, totalCount, err := s.repo.GetAll(ctx, pageNumber, pageSize)
+	// Получаем данные из репозитория
+	usersPtr, totalCount, err := s.repo.GetAll(ctx, pageNumber, pageSize)
 	if err != nil {
 		s.logger.Error("Failed to fetch all users", zap.Error(err))
 		return nil, err
 	}
 
-	// Преобразуем RowArticle в ArticleResponse
+	// Проверяем, что указатель не nil
+	if usersPtr == nil {
+		s.logger.Warn("No users found")
+		usersPtr = &[]model.RowUser{} // Создаем пустой слайс
+	}
+
+	// Разыменовываем указатель на слайс
+	users := *usersPtr
+
+	// Преобразуем RowUser в UserResponse
 	transformedResp := make([]*model.UserResponse, len(users))
 	for i, user := range users {
 		transformedResp[i] = user.CreateUserResp()
 	}
 
-	// Формируем структуру Paginate с типом ArticleResponse
+	// Формируем структуру Paginate с типом UserResponse
 	result := &model.Paginate[*model.UserResponse]{
 		PageNumber:     pageNumber,
-		RowTotalCount:  int(totalCount),
+		RowTotalCount:  totalCount,
 		TotalPageCount: utils.CalculateTotalPages(totalCount, pageSize),
 		PageSize:       pageSize,
 		Items:          transformedResp,
@@ -98,5 +109,15 @@ func (s *userService) GetAllUsers(ctx context.Context, pageNumber, pageSize int)
 		zap.Int("fetchedItems", len(transformedResp)),
 	)
 
+	return result, nil
+}
+
+func (s *userService) GetUserByEmail(ctx context.Context, email string) (*model.UserResponse, error) {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		s.logger.Error("Failed to fetch user by email", zap.Error(err))
+		return nil, err
+	}
+	result := user.CreateUserResp()
 	return result, nil
 }

@@ -46,7 +46,7 @@ func NewContainer() *Container {
 	// Create services
 	articleService := service.NewArticleService(articleRepo, logger)
 	userService := service.NewUserService(userRepo, logger)
-	jwtService := service.NewJWTService(env.GetEnv("JWT_TOKEN", ""), logger)
+	jwtService := service.NewJWTService(env.GetEnv("JWT_KEY", ""), logger)
 	authService := service.NewAuthService(userRepo, jwtService, logger)
 	// Create handlers
 	articleHandler := handlers.NewArticleHandler(articleService, logger)

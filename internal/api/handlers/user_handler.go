@@ -50,7 +50,7 @@ func (h *userHandler) CreateUser(c *fiber.Ctx) error {
 	user, err := h.service.CreateNewAdmin(c.Context(), &body)
 	if err != nil {
 		h.logger.Error("Failed to create article", zap.Error(err))
-		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to create article", nil).Send(c)
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to create user", nil).Send(c)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(user)
@@ -108,7 +108,7 @@ func (h *userHandler) RemoveUserById(c *fiber.Ctx) error {
 	removedUser, err := h.service.RemoveUserById(c.Context(), userId)
 	if err != nil {
 		h.logger.Error("Failed to remove article", zap.String("userId", userId), zap.Error(err))
-		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to remove article", nil).Send(c)
+		return http_error.NewHTTPError(fiber.StatusInternalServerError, "Failed to remove user", nil).Send(c)
 	}
 
 	h.logger.Info("User removed successfully", zap.String("userId", userId))

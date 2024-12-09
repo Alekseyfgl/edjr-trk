@@ -4,6 +4,7 @@ import (
 	"context"
 	"edjr-trk/configs/env"
 	"edjr-trk/pkg/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -41,6 +42,9 @@ func InitMongoSingleton() {
 
 		log.Info("Connected to MongoDB successfully!")
 		mongoClient = client
+
+		// Ensure unique index on email field
+		ensureEmailUniqueIndex(ctx)
 	})
 }
 
@@ -63,5 +67,25 @@ func CloseMongoClient() {
 		} else {
 			log.Info("MongoDB client disconnected successfully.")
 		}
+	}
+}
+
+// ensureEmailUniqueIndex creates a unique index on the "email" field in the "users" collection.
+func ensureEmailUniqueIndex(ctx context.Context) {
+	usersCollection := GetClient().Database(env.GetEnv("MONGO_DB_NAME", "default_db")).Collection("users")
+
+	// Define the index model
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{Key: "email", Value: 1}}, // Create index on "email" field
+		Options: options.Index().
+			SetUnique(true).               // Make the index unique
+			SetName("unique_email_index"), // Optional: name for the index
+	}
+
+	// Create the index
+	if _, err := usersCollection.Indexes().CreateOne(ctx, indexModel); err != nil {
+		log.Fatal("Failed to create unique index on email field", zap.Error(err))
+	} else {
+		log.Info("Unique index on email field created successfully.")
 	}
 }

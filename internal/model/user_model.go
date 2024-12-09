@@ -22,7 +22,7 @@ type UserResponse struct {
 	ID        primitive.ObjectID `json:"id"`
 	Email     string             `json:"email"`
 	Phone     string             `json:"phone"`
-	IsAdmin   bool               `json:"IsAdmin"`
+	IsAdmin   bool               `json:"isAdmin"`
 	CreatedAt time.Time          `json:"createdAt"`
 	UpdatedAt time.Time          `json:"updatedAt"`
 }

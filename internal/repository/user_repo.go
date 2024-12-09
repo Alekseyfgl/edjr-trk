@@ -37,7 +37,7 @@ func NewUserRepository(client *mongo.Client, logger *zap.Logger) UserRepositoryI
 func (r *userRepository) CreateNewAdmin(ctx context.Context, user *model.RowUser) (*model.RowUser, error) {
 	result, err := r.collection.InsertOne(ctx, user)
 	if err != nil {
-		r.logger.Error("Failed to insert article", zap.Error(err))
+		r.logger.Error("Failed to insert user", zap.Error(err))
 		return nil, err
 	}
 
@@ -48,7 +48,7 @@ func (r *userRepository) CreateNewAdmin(ctx context.Context, user *model.RowUser
 	}
 
 	user.ID = insertedID
-	r.logger.Info("Article created successfully", zap.String("id", user.ID.Hex()))
+	r.logger.Info("User created successfully", zap.String("id", user.ID.Hex()))
 
 	return user, nil
 }

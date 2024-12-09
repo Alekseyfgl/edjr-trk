@@ -7,11 +7,11 @@ import (
 
 // Paginate - common structure for pagination
 type Paginate[T any] struct {
-	PageNumber    int `json:"pageNumber"`
-	RowTotalCount int `json:"rowTotalCount"`
-	CurrentPage   int `json:"currentPage"`
-	PageSize      int `json:"pageSize"`
-	Items         []T `json:"items"`
+	PageNumber     int `json:"pageNumber"`
+	RowTotalCount  int `json:"rowTotalCount"`
+	TotalPageCount int `json:"totalPageCount"`
+	PageSize       int `json:"pageSize"`
+	Items          []T `json:"items"`
 }
 
 // RowArticle - структура для хранения данных статьи.

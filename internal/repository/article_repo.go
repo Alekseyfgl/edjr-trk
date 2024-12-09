@@ -19,7 +19,7 @@ type ArticleRepositoryInterface interface {
 	Create(ctx context.Context, article model.RowArticle) (model.RowArticle, error)
 	PatchArticleById(ctx context.Context, dto *dto.PatchArticleRequest, id string) (*model.RowArticle, error)
 	GetArticleById(ctx context.Context, id string) (*model.RowArticle, error)
-	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int64, error)
+	GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int, error)
 	RemoveArticleById(ctx context.Context, id string) error
 }
 
@@ -39,7 +39,7 @@ func NewArticleRepository(client *mongo.Client, logger *zap.Logger) ArticleRepos
 }
 
 // GetAll - get all articles with sort(desc) and pagination
-func (r *articleRepository) GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int64, error) {
+func (r *articleRepository) GetAll(ctx context.Context, pageNumber, pageSize int) ([]model.RowArticle, int, error) {
 	if pageNumber < 1 {
 		pageNumber = 1
 	}
@@ -50,12 +50,12 @@ func (r *articleRepository) GetAll(ctx context.Context, pageNumber, pageSize int
 	skip := utils.CalculateOffset(pageNumber, pageSize)
 
 	//common document count
-	totalCount, err := r.collection.CountDocuments(ctx, bson.M{})
+	totalCount64, err := r.collection.CountDocuments(ctx, bson.M{})
 	if err != nil {
 		r.logger.Error("Failed to count articles", zap.Error(err))
 		return nil, 0, err
 	}
-
+	totalCount := int(totalCount64)
 	// Setting up search parameters with sorting
 	findOptions := options.Find().
 		SetSkip(int64(skip)).
@@ -87,7 +87,7 @@ func (r *articleRepository) GetAll(ctx context.Context, pageNumber, pageSize int
 	r.logger.Info("Articles fetched successfully with pagination and sorting",
 		zap.Int("pageNumber", pageNumber),
 		zap.Int("pageSize", pageSize),
-		zap.Int64("totalCount", totalCount),
+		zap.Int("totalCount", totalCount),
 		zap.Int("fetchedItems", len(articles)),
 	)
 

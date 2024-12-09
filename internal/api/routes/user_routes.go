@@ -17,11 +17,13 @@ func RegisterUserRoutes(app *fiber.App, container *ioc.Container) {
 
 	app.Delete("/users/:id",
 		auth.BasicAuthMiddleware(),
+		dto_validators.ValidateUserIdMiddleware(container.Logger),
 		container.UserHandler.RemoveUserById,
 	)
 
 	app.Get("/users",
 		auth.BasicAuthMiddleware(),
+		dto_validators.ValidatePaginationMiddleware(container.Logger),
 		container.UserHandler.GetAllUsers,
 	)
 }

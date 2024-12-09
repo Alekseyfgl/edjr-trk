@@ -5,6 +5,7 @@ import (
 	"edjr-trk/internal/api/dto"
 	"edjr-trk/internal/model"
 	"edjr-trk/internal/repository"
+	"edjr-trk/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"time"
@@ -45,11 +46,11 @@ func (s *ArticleService) GetAllArticles(ctx context.Context, pageNumber, pageSiz
 
 	// Формируем структуру Paginate с типом ArticleResponse
 	result := &model.Paginate[*model.ArticleResponse]{
-		PageNumber:    pageNumber,
-		RowTotalCount: int(totalCount),
-		CurrentPage:   pageNumber,
-		PageSize:      pageSize,
-		Items:         transformedResp,
+		PageNumber:     pageNumber,
+		RowTotalCount:  totalCount,
+		TotalPageCount: utils.CalculateTotalPages(totalCount, pageSize),
+		PageSize:       pageSize,
+		Items:          transformedResp,
 	}
 
 	s.logger.Info("All articles fetched successfully with pagination",

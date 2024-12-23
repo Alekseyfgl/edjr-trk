@@ -24,7 +24,6 @@ func InitMongoSingleton() {
 		if mongoURI == "" {
 			log.Fatal("MONGO_URI is not set in environment variables")
 		}
-
 		// Create a context with timeout
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -78,7 +77,7 @@ func ensureEmailUniqueIndex(ctx context.Context) {
 	indexModel := mongo.IndexModel{
 		Keys: bson.D{{Key: "email", Value: 1}}, // Create index on "email" field
 		Options: options.Index().
-			SetUnique(true).               // Make the index unique
+			SetUnique(true). // Make the index unique
 			SetName("unique_email_index"), // Optional: name for the index
 	}
 

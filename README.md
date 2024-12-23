@@ -31,3 +31,39 @@ edjr-trk/
 ├── pkg/
 │   └── log/
 │       └── log.go               # Logger setup and utility functions
+
+```
+
+## Building the Image and container
+
+Run the following command in the root directory of the project (where the Dockerfile is located):
+
+```bash
+
+docker build -t go .
+```
+### Running the Container with Required Environment Variables
+```bash
+
+docker run \
+  -p 3000:3000 \
+  -e SERV_PORT=3000 \
+  -e MONGO_DB_NAME="default_db" \
+  -e MONGO_URI="" \
+  -e JWT_KEY="vkldfgklfd" \
+  -e SUPER_ADMIN_LOGIN="admin" \
+  -e SUPER_ADMIN_PASSWORD="admin" \
+  --name my-go-app-cnt \
+  go
+```
+
+*  ```-p``` 3000:3000 maps the container's port 3000 to the host's port 3000.
+* The ```-e``` flags specify the environment variables for the container.
+* The ```-d``` flag runs the container in detached mode (in the background).
+* ```--name``` my-go-app-cnt assigns a custom name to the container for easier management.
+
+### Restarting a Stopped or Crashed Container
+```bash
+
+docker start my-go-app-cnt
+```

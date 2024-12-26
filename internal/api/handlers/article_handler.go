@@ -45,7 +45,7 @@ func (h *ArticleHandler) CreateArticle(c *fiber.Ctx) error {
 
 // GetAllArticles handles fetching all articles with pagination.
 func (h *ArticleHandler) GetAllArticles(c *fiber.Ctx) error {
-	h.logger.Info("Received request to fetch paginated articles")
+	h.logger.Info("GetAllArticles")
 
 	// Retrieve pagination parameters from context.
 	pageNumberInterface := c.Locals("pageNumber")

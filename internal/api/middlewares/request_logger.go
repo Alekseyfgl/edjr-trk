@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"edjr-trk/pkg/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,11 +23,15 @@ func RequestLoggerMiddleware(logger *zap.Logger) func(c *fiber.Ctx) error {
 		// Get the response status code
 		statusCode := c.Response().StatusCode()
 
+		// Get the client's real IP address
+		clientIP := utils.GetClientIP(c)
+
 		// Log the request and response details
 		logger.Info("Request processed",
 			zap.String("request_id", requestID),
 			zap.String("method", c.Method()),
 			zap.String("path", c.Path()),
+			zap.String("client_ip", clientIP),
 			zap.Int("status_code", statusCode),
 			zap.Duration("duration", duration))
 

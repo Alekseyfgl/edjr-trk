@@ -7,25 +7,30 @@ import (
 
 var logger *zap.Logger
 
-// InitLogger инициализирует глобальный логгер
+// InitLogger initializes the global logger
 func InitLogger() {
+	if logger != nil {
+		panic("Logger is already initialized")
+	}
+
 	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder // Цветные уровни
-	config.EncoderConfig.TimeKey = "timestamp"                          // Время
-	config.EncoderConfig.CallerKey = "caller"                           // Файл и строка
-	config.EncoderConfig.MessageKey = "message"                         // Сообщение
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder        // Формат времени
+	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder // Colored levels
+	config.EncoderConfig.TimeKey = "timestamp"                          // Time key
+	config.EncoderConfig.CallerKey = "caller"                           // File and line key
+	config.EncoderConfig.MessageKey = "message"                         // Message key
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder        // Time format
+	config.DisableStacktrace = true
 
 	baseLogger, err := config.Build()
 	if err != nil {
 		panic(err)
 	}
 
-	// Добавляем AddCallerSkip, чтобы исключить путь log.go из вызова
-	logger = baseLogger.WithOptions(zap.AddCallerSkip(1)) // Пропускаем 1 уровень вызова
+	// Skip 1 call frame for correct log source display
+	logger = baseLogger.WithOptions(zap.AddCallerSkip(1))
 }
 
-// GetLogger возвращает текущий экземпляр логгера
+// GetLogger returns the current logger instance
 func GetLogger() *zap.Logger {
 	if logger == nil {
 		panic("Logger is not initialized. Call InitLogger() first.")
@@ -33,34 +38,46 @@ func GetLogger() *zap.Logger {
 	return logger
 }
 
-// SyncLogger синхронизирует буфер логгера (например, для flush)
+// SyncLogger synchronizes the logger buffer (e.g., flush)
 func SyncLogger() {
 	if logger != nil {
 		_ = logger.Sync()
 	}
 }
 
-// Debug обёртка для logger.Debug
+// Debug logs a debug-level message
 func Debug(msg string, fields ...zap.Field) {
+	ensureLoggerInitialized()
 	logger.Debug(msg, fields...)
 }
 
-// Info обёртка для logger.Info
+// Info logs an info-level message
 func Info(msg string, fields ...zap.Field) {
+	ensureLoggerInitialized()
 	logger.Info(msg, fields...)
 }
 
-// Warn обёртка для logger.Warn
+// Warn logs a warning-level message
 func Warn(msg string, fields ...zap.Field) {
+	ensureLoggerInitialized()
 	logger.Warn(msg, fields...)
 }
 
-// Error обёртка для logger.Error
+// Error logs an error-level message
 func Error(msg string, fields ...zap.Field) {
+	ensureLoggerInitialized()
 	logger.Error(msg, fields...)
 }
 
-// Fatal обёртка для logger.Fatal
+// Fatal logs a fatal-level message and exits
 func Fatal(msg string, fields ...zap.Field) {
+	ensureLoggerInitialized()
 	logger.Fatal(msg, fields...)
+}
+
+// ensureLoggerInitialized checks if the logger is initialized
+func ensureLoggerInitialized() {
+	if logger == nil {
+		panic("Logger is not initialized. Call InitLogger() first.")
+	}
 }

@@ -24,7 +24,7 @@ func NewEmailService(repo repository.EmailRepositoryInterface, logger *zap.Logge
 func (s *emailService) SendMessage(dto *dto.SendEmailRequest) error {
 	from := env.GetEnv("GMAIL_FROM", "")
 	password := env.GetEnv("GMAIL_PASSWORD", "")
-	to := "aleksey.fgl@gmail.com"
+	to := env.GetEnv("GMAIL_TO", "")
 	subject := "Message from your website!"
 	body := fmt.Sprintf(
 		`<html>

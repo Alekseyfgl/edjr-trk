@@ -29,6 +29,7 @@ func (s *emailService) SendMessage(dto *dto.SendEmailRequest) error {
 	body := fmt.Sprintf(
 		`<html>
 		<body>
+			<p><strong>Email:</strong> %s</p>
 			<p><strong>Name:</strong> %s</p>
 			<p><strong>Phone:</strong> <a href="tel:%s">%s</a></p>
 			<p><strong>Message:</strong></p>
@@ -36,7 +37,7 @@ func (s *emailService) SendMessage(dto *dto.SendEmailRequest) error {
 			<p>Best wishes,<br>Your team.</p>
 		</body>
 		</html>`,
-		dto.Name, dto.Phone, dto.Phone, dto.Text,
+		dto.Email, dto.Name, dto.Phone, dto.Phone, dto.Text,
 	)
 
 	err := s.repo.SendEmail(from, password, to, subject, body)

@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterUserRoutes - регистрирует маршруты для работы с user
-func RegisterUserRoutes(app *fiber.App, container *ioc.Container) {
+func RegisterUserRoutes(app fiber.Router, container *ioc.Container) {
 	app.Post("/users",
 		auth.BasicAuthMiddleware(),
 		dto_validator.ValidateCreateUserMiddleware(container.Logger),

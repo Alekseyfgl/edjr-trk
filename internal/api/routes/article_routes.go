@@ -8,7 +8,7 @@ import (
 )
 
 // RegisterArticleRoutes - регистрирует маршруты для работы со статьями
-func RegisterArticleRoutes(app *fiber.App, container *ioc.Container) {
+func RegisterArticleRoutes(app fiber.Router, container *ioc.Container) {
 	app.Post("/articles",
 		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateCreateArticleMiddleware(container.Logger),

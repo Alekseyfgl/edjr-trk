@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func RegisterAuthRoutes(app *fiber.App, container *ioc.Container) {
+func RegisterAuthRoutes(app fiber.Router, container *ioc.Container) {
 	app.Post("/auth/login",
 		dto_validator.ValidateLoginMiddleware(container.Logger),
 		container.AuthHandler.Login,

@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func RegisterEmailRoutes(app *fiber.App, container *ioc.Container) {
+func RegisterEmailRoutes(app fiber.Router, container *ioc.Container) {
 	app.Post("/email",
 		dto_validator.RateLimiterMiddleware(container.Logger, container.RateLimitService),
 		dto_validator.ValidateSendEmailMiddleware(container.Logger),

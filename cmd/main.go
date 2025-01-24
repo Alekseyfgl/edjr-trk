@@ -33,14 +33,17 @@ func main() {
 
 	// Middleware: Global error handling
 	app.Use(middlewares.ErrorHandlerMiddleware(container.Logger))
-	//Middleware: Request logging
+	// Middleware: Request logging
 	app.Use(middlewares.RequestLoggerMiddleware(container.Logger))
 
-	// Register routes
-	routes.RegisterArticleRoutes(app, container)
-	routes.RegisterUserRoutes(app, container)
-	routes.RegisterAuthRoutes(app, container)
-	routes.RegisterEmailRoutes(app, container)
+	// Create a group for API routes with prefix `/api`
+	api := app.Group("/api")
+
+	// Register routes within the `/api` group
+	routes.RegisterArticleRoutes(api, container)
+	routes.RegisterUserRoutes(api, container)
+	routes.RegisterAuthRoutes(api, container)
+	routes.RegisterEmailRoutes(api, container)
 
 	// Start the server
 	port := env.GetEnv("SERV_PORT", "3000")

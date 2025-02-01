@@ -161,8 +161,6 @@ func (r *articleRepository) PatchArticleById(ctx context.Context, dto *dto.Patch
 	}
 	if dto.Img != nil {
 		update["img"] = *dto.Img
-	} else {
-		update["img"] = nil
 	}
 
 	if len(update) == 0 {

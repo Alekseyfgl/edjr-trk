@@ -28,7 +28,7 @@ func main() {
 	// Middleware: CORS
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // Allow all origins, consider limiting this for production
-		AllowMethods: "GET,POST,PUT,DELETE",
+		AllowMethods: "GET,POST,PUT,DELETE,PATCH",
 	}))
 
 	// Middleware: Global error handling

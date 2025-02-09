@@ -7,7 +7,7 @@ import (
 	"edjr-trk/internal/repository"
 	"edjr-trk/internal/service"
 	"edjr-trk/pkg/log"
-	mongodb "go.mongodb.org/mongo-driver/mongo" // Импортируем MongoDB драйвер правильн
+	mongodb "go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"time"
 )
@@ -17,15 +17,18 @@ type Container struct {
 	Logger           *zap.Logger
 	MongoClient      *mongodb.Client
 	ArticleRepo      repository.ArticleRepositoryInterface
+	ProductRepo      repository.ProductRepositoryInterface
 	UserRepo         repository.UserRepositoryInterface
 	EmailRepo        repository.EmailRepositoryInterface
 	ArticleService   service.ArticleServiceInterface
+	ProductService   service.ProductServiceInterface
 	UserService      service.UserServiceInterface
 	JwtService       service.JWTServiceInterface
 	AuthService      service.AuthServiceInterface
 	EmailService     service.EmailServiceInterface
 	RateLimitService *service.RateLimiter
 	ArticleHandler   *handlers.ArticleHandler
+	ProductHandler   *handlers.ProductHandler
 	UserHandler      handlers.UserHandlerInterface
 	AuthHandler      handlers.AuthHandlerInterface
 	EmailHandler     handlers.EmailHandlerInterface
@@ -47,10 +50,12 @@ func NewContainer() *Container {
 
 	// Create repositories
 	articleRepo := repository.NewArticleRepository(clientDB, logger)
+	productRepo := repository.NewProductRepository(clientDB, logger)
 	userRepo := repository.NewUserRepository(clientDB, logger)
 	emailRepo := repository.NewSMTPEmailRepository("smtp.gmail.com", "587", logger)
 	// Create services
 	articleService := service.NewArticleService(articleRepo, logger)
+	productService := service.NewProductService(productRepo, logger)
 	userService := service.NewUserService(userRepo, logger)
 	jwtService := service.NewJWTService(env.GetEnv("JWT_KEY", ""), logger)
 	authService := service.NewAuthService(userRepo, jwtService, logger)
@@ -59,6 +64,7 @@ func NewContainer() *Container {
 	rateLimitService := service.NewRateLimiter(3, time.Minute, 5*time.Minute)
 	// Create handlers
 	articleHandler := handlers.NewArticleHandler(articleService, logger)
+	productHandler := handlers.NewProductHandler(productService, logger)
 	userHandler := handlers.NewUserHandler(userService, logger)
 	authHandler := handlers.NewAuthHandler(authService, logger)
 	emailHandler := handlers.NewEmailHandler(emailService, logger)
@@ -68,14 +74,17 @@ func NewContainer() *Container {
 		Logger:           logger,
 		MongoClient:      clientDB,
 		ArticleRepo:      articleRepo,
+		ProductRepo:      productRepo,
 		UserRepo:         userRepo,
 		EmailRepo:        emailRepo,
 		ArticleService:   articleService,
+		ProductService:   productService,
 		UserService:      userService,
 		JwtService:       jwtService,
 		EmailService:     emailService,
 		RateLimitService: rateLimitService,
 		ArticleHandler:   articleHandler,
+		ProductHandler:   productHandler,
 		UserHandler:      userHandler,
 		AuthHandler:      authHandler,
 		EmailHandler:     emailHandler,

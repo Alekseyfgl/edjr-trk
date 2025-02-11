@@ -60,11 +60,12 @@ func (s *productService) GetAllProducts(ctx context.Context, pageNumber, pageSiz
 
 func (s *productService) CreateProduct(ctx context.Context, req dto.CreateProductRequest) (*model.ProductResponse, error) {
 	newArticle := model.RowProduct{
-		ID:    primitive.NewObjectID(),
-		Title: req.Title,
-		Text:  req.Text,
-		Img:   req.Img,
-		Date:  time.Now(), // Используем primitive.DateTime для MongoDB
+		ID:        primitive.NewObjectID(),
+		Title:     req.Title,
+		Text:      req.Text,
+		ShortText: req.ShortText,
+		Img:       req.Img,
+		Date:      time.Now(),
 	}
 
 	createdArticle, err := s.repo.CreateProduct(ctx, newArticle)

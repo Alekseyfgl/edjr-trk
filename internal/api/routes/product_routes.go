@@ -8,31 +8,31 @@ import (
 )
 
 func RegisterProductRoutes(app fiber.Router, container *ioc.Container) {
-	app.Post("/products",
+	app.Post("/projects",
 		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateCreateProductMiddleware(container.Logger),
 		container.ProductHandler.CreateProduct,
 	)
 
-	app.Patch("/products/:id",
+	app.Patch("/projects/:id",
 		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateProductIdMiddleware(container.Logger),
 		dto_validator.ValidatePatchProductMiddleware(container.Logger),
 		container.ProductHandler.PatchProductById,
 	)
 
-	app.Delete("/products/:id",
+	app.Delete("/projects/:id",
 		auth.JwtAuthMiddleware(container.JwtService),
 		dto_validator.ValidateProductIdMiddleware(container.Logger),
 		container.ProductHandler.RemoveProductById,
 	)
 
-	app.Get("/products/:id",
+	app.Get("/projects/:id",
 		dto_validator.ValidateProductIdMiddleware(container.Logger),
 		container.ProductHandler.GetProductById,
 	)
 
-	app.Get("/products",
+	app.Get("/projects",
 		dto_validator.ValidatePaginationMiddleware(container.Logger),
 		container.ProductHandler.GetAllProducts,
 	)

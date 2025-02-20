@@ -148,7 +148,7 @@ func (r *productRepository) PatchProductById(ctx context.Context, dto *dto.Patch
 	if dto.Text != nil {
 		update["text"] = *dto.Text
 	}
-	if dto.Text != nil {
+	if dto.ShortText != nil {
 		update["shortText"] = *dto.ShortText
 	}
 	if dto.Img != nil {
